@@ -1,0 +1,23 @@
+<!--
+  Generated template for the FilmPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>film</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+  <ion-list>
+    <button ion-item *ngFor="let film of (films | async)?.results" (click)="openDetails(film)">
+      <ion-icon name="add" item-left></ion-icon>
+    {{film.title}}
+  </button>
+  </ion-list>
+</ion-content>

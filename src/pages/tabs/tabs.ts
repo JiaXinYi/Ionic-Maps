@@ -15,9 +15,9 @@ import { IonicPage, NavController } from 'ionic-angular';
 })
 export class TabsPage {
 
-  GoogleMapRoot = 'GoogleMapPage'
-  GaodeMapRoot = 'GaodeMapPage'
-  BaiduMapRoot = 'BaiduMapPage'
+  mapsRoot = 'MapsPage'
+  callsRoot = 'CallsPage'
+  starsRoot = 'StarsPage'
 
 
   constructor(public navCtrl: NavController) {}

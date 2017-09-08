@@ -1,0 +1,190 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+		<style type="text/css">
+			body, html{width: 100%;height: 100%; font-family:"微软雅黑";font-size: 14px;}
+			*{ margin: 0;padding: 0;}
+			.left{float:left;}
+			.right{float:right;}
+			.clearfix{clear: both;}
+			.hide{display: none;}
+			#map{height:628px;width: calc(100% - 305px);border: 1px solid #dadada;}
+			#result{height: 520px; font-size: 13px; line-height: 20px;overflow: auto;color: #666;}
+			#result ul {
+				list-style: outside none none;
+			}
+			#result ul li{
+				border-bottom: 1px solid #dadada;
+				padding: 10px;
+			}
+			#result ul li:hover{
+				background-color: #f0f0f0;
+				cursor: pointer;
+			}
+			#result .res-data{
+				background: url(img/ico_marker.png) no-repeat -1px 15px;
+			}
+			#result .res-marker{
+				width: 30px; 
+				height: 58px; 
+				line-height: 58px; 
+				text-align: center; 
+				color: rgb(255, 255, 255); 
+				font-weight: bold;
+			}
+			#result .res-address{
+				width: 235px;
+			}
+			#result .title{
+				font-size: 16px;
+				color: #000000;
+			}
+			.area-right{
+				width:303px;
+			}
+			.area-right .search{
+				 border-bottom: 1px solid #dadada;
+				padding: 8px 0;
+				box-shadow: 8px 8px 8px #888888;
+				margin-bottom: 8px;
+			}
+			.area-right .search .s-address{
+				margin-bottom: 5px;position: relative;border-bottom: 1px solid #DADADA;padding: 0 10px;height: 32px;line-height: 32px;
+			}
+			.area-right .search .s-address .btn{
+				position: absolute;right: 10px;top: 5px;cursor: pointer;
+			}
+			.area-right .search .s-address .btn img{
+				width: 22px;
+			}
+			.area-right .search .address{
+				height: 28px;
+				line-height: 28px;
+				border: none;
+				outline: medium;/*去掉鼠标点击后的边框*/
+			}
+			
+			.area-right .search .cur_point{
+				color: #1E90FF;padding: 0 10px;font-size: 13px;
+			}
+			.area-right .search .point{
+				border:none;
+			}
+		</style>
+		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=cN6FHGCEkviW63zu4PncV6aoqG0GOEaI"></script>
+		<script type="text/javascript" src="js/jquery-3.1.1.min.js" ></script>
+		<title>本地搜索的数据接口</title>
+	</head>
+	<body>
+		<div>
+			<div class="left" id="map"></div>
+			<div class="left area-right">
+				<div class="search">
+					<div class="s-address">
+						检索地址：<input type="text" class="address" id="address" placeholder="望京SOHO"/>
+						<div onclick="doSearch();" class="btn"><img src="img/ico_btn_search.png"/></div>
+					</div>
+					<div class="cur_point">
+						当前坐标：<span id="s-point"></span><br/>
+						当前检索城市：<span id="s-city"></span>
+					</div>
+				</div>
+				<div id="result">
+					<!--<ul>
+						<li>
+							<div class="res-data">
+								<div class="left res-marker">
+									<span>A</span>
+								</div>
+								<div class="left res-address">
+									<div class="title">望京</div>
+									<div>地址：<span class="rout">地铁14号线; 地铁15号线</span></div>
+									<div>坐标：<span class="point">116.475304,40.004532</span></div>
+								</div>
+								<div class="clearfix"></div>
+							</div>
+						</li>
+					</ul>-->
+				</div>
+			</div>
+			<div class="clearfix"></div>
+		</div>
+	</body>
+	</html>
+	<script type="text/javascript">
+	
+		$(function(){
+			//浏览器当前窗口文档body的高度 
+			var height = $(document.body).height();
+			$("#map").css("height",(height-5)+"px");
+			$("#result").css("height",(height-100)+"px");
+			
+			$("#address").val("");
+			$("#result").on("click","li",function(){
+				var point = $(this).find(".point").text();
+				$("#s-point").text(point);//赋值
+				$("#result li").css("background-color","#fff");
+				$(this).css("background-color","#f0f0f0");
+			});
+			
+			//绑定input文本框回车事件
+			$('#address').bind('keypress',function(event){
+				if(event.keyCode == "13"){
+				   doSearch();//搜索
+				}
+			});
+			
+		});
+	
+		// 百度地图API功能
+		var map = new BMap.Map("map");        
+		map.centerAndZoom(new BMap.Point(116.404, 39.915), 11);
+		map.enableScrollWheelZoom();//启用滚轮放大缩小，默认禁用
+		
+		//单击获取点击的经纬度
+		map.addEventListener("click",function(e){
+			$("#s-point").text(e.point.lng+","+e.point.lat);
+			var marker = new BMap.Marker(e.point);
+			map.addOverlay(marker);
+		});
+		
+		//map展现结果的地图实例
+		//autoViewport检索结束后是否自动调整地图视野
+		var local = new BMap.LocalSearch(map,{renderOptions:{map:map,autoViewport:true}});
+		
+		//地址检索
+		function doSearch(){
+			var address = document.getElementById("address").value;
+			local.search(address);
+			
+			//检索结束后的回调方法
+			local.setSearchCompleteCallback(function(results){
+				// 判断状态是否正确
+				if (local.getStatus() == BMAP_STATUS_SUCCESS){
+					var str = "<ul>";
+					for (var i = 0; i < results.getCurrentNumPois(); i ++){
+						var poi = results.getPoi(i);
+	//                    console.log(JSON.stringify(poi));
+						str+='<li>';
+							str+='<div class="res-data">';
+								str+='<div class="left res-marker">';
+									str+='<span>'+String.fromCharCode(65+i)+'</span>';
+								str+='</div>';
+								str+='<div class="left res-address">';
+									str+='<div class="title">'+poi.title+'</div>';
+									str+='<div>地址：<span class="rout">'+poi.address+'</span></div>';
+									str+='<div>坐标：<span class="point">'+poi.point.lng+","+poi.point.lat+'</span></div>';
+								str+='</div>';
+								str+='<div class="clearfix"></div>';
+							str+='</div>';
+						str+='</li>';
+					}
+					str+='</ul>';
+					$("#result").html(str);
+					$("#s-city").text(results.province+results.city);
+					$("#s-point").text(results.getPoi(0).point.lng+","+results.getPoi(0).point.lat);
+				}
+			});
+		}
+	</script>
